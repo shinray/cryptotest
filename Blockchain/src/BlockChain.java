@@ -41,6 +41,7 @@ public class BlockChain {
     */
    public BlockChain(Block genesisBlock) {
       // IMPLEMENT THIS
+	   
 	   return;
    }
 
@@ -76,6 +77,8 @@ public class BlockChain {
     */
    public boolean addBlock(Block b) {
        // IMPLEMENT THIS
+	   
+	   if(b.getPrevBlockHash() == null) return false;
 	   return false;
    }
 
