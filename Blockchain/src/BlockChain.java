@@ -13,7 +13,8 @@ public class BlockChain {
    private class BlockNode {
       public Block b;
       public BlockNode parent;
-      public ArrayList<BlockNode> children;
+      public ArrayList<BlockNode> children; // what is the point of a LIST of children?
+      // shouldn't there be only one child per node?
       public int height;
       // utxo pool for making a new block on top of this block
       private UTXOPool uPool;
@@ -35,13 +36,20 @@ public class BlockChain {
          return new UTXOPool(uPool);
       }
    }
+   
+   // List of nodes
+   ArrayList<BlockNode> chain = new ArrayList<BlockNode>();
+   UTXOPool pending = new UTXOPool();
+   TransactionPool pool = new TransactionPool();
+   int height = 0;
 
    /* create an empty block chain with just a genesis block.
     * Assume genesis block is a valid block
     */
    public BlockChain(Block genesisBlock) {
       // IMPLEMENT THIS
-	   
+	   chain.add(new BlockNode(genesisBlock,null,pending));
+	   height = 1;
 	   return;
    }
 
@@ -49,7 +57,8 @@ public class BlockChain {
     */
    public Block getMaxHeightBlock() {
       // IMPLEMENT THIS
-	   return null;
+	   return chain.get(height-1).b;
+	   //return null;
    }
    
    /* Get the UTXOPool for mining a new block on top of 
@@ -57,14 +66,16 @@ public class BlockChain {
     */
    public UTXOPool getMaxHeightUTXOPool() {
       // IMPLEMENT THIS
-	   return null;
+	   return chain.get(height-1).getUTXOPoolCopy();
+	   //return null;
    }
    
    /* Get the transaction pool to mine a new block
     */
    public TransactionPool getTransactionPool() {
       // IMPLEMENT THIS
-	   return null;
+	   return pool;
+	   //return null;
    }
 
    /* Add a block to block chain if it is valid.
@@ -79,6 +90,7 @@ public class BlockChain {
        // IMPLEMENT THIS
 	   
 	   if(b.getPrevBlockHash() == null) return false;
+	   BlockNode newBlock = new BlockNode(b,this.height,pending);
 	   return false;
    }
 
@@ -86,5 +98,6 @@ public class BlockChain {
     */
    public void addTransaction(Transaction tx) {
       // IMPLEMENT THIS
+	   pool.addTransaction(tx);
    }
 }

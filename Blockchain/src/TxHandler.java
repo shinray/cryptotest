@@ -107,6 +107,7 @@ public class TxHandler {
 		for(Transaction t : possibleTxs){
 			if(isValidTx(t)){
 				verifiedTxs.add(t);
+				
 			}
 		}
 		Transaction[] ret = new Transaction[verifiedTxs.size()];
