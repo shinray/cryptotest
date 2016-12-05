@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 /* Block Chain should maintain only limited block nodes to satisfy the functions
@@ -43,6 +44,8 @@ public class BlockChain {
    private TransactionPool pool;
    private int height;
    private BlockNode maxHeightBlock;
+   //hashmap?
+   private HashMap<ByteArrayWrapper, BlockNode> H;
 
    /* create an empty block chain with just a genesis block.
     * Assume genesis block is a valid block
@@ -67,7 +70,13 @@ public class BlockChain {
 	   maxHeightBlock = genesis;
 	   height = 1;
 	   
-	   return;
+	   pool = new TransactionPool();
+	   
+	   //hashmap?
+	   H = new HashMap<ByteArrayWrapper, BlockNode>();
+	   H.put(new ByteArrayWrapper(genesisBlock.getHash()), genesis);
+	   
+	   //return;
    }
 
    /* Get the maximum height block
@@ -108,8 +117,55 @@ public class BlockChain {
    public boolean addBlock(Block b) {
        // IMPLEMENT THIS
 	   
+	   //ByteArrayWrapper prevhashW = new ByteArrayWrapper(b.getPrevBlockHash());
+	   byte[] PrevBlockHash = b.getPrevBlockHash();
+	   if (PrevBlockHash == null) return false; // fix stupid nullpointerexception
+	   
+	   ByteArrayWrapper prevhashW = new ByteArrayWrapper(PrevBlockHash);
+	   
 	   if(b.getPrevBlockHash() == null || b.equals(null)) return false;
 	   //BlockNode newBlock = new BlockNode(b,this.height,pending);
+	   
+	   //hash?
+	   // the new block had better point to an existing block's hash
+	   if (!this.H.containsKey(prevhashW)) return false;
+	   
+	   //validate transactions
+	   
+	   		//create copy of transaction list, just in case
+	   ArrayList<Transaction> txs = b.getTransactions();
+	   Transaction[] txArray = new Transaction[txs.size()];
+	   txArray = txs.toArray(txArray);
+	   Transaction[] txArrayCopy = Arrays.copyOf(txArray, txArray.length);
+	   		//compare the block's transactions with our pool's transactions
+	   TxHandler txHandler = new TxHandler(this.H.get(prevhashW).uPool);
+	   if (!Arrays.equals(txArrayCopy, txHandler.handleTxs(txArray))) {
+		   return false;
+	   }
+	   
+	   //almost done, start creating new BlockNode
+	   
+	   Transaction coinbase = b.getCoinbase();
+	   UTXO uCoinBase = new UTXO(coinbase.getHash(),0);
+	   UTXOPool uPool = new UTXOPool(txHandler.getUTXOPool());
+	   uPool.addUTXO(uCoinBase, coinbase.getOutput(0));
+	   BlockNode newBlock = new BlockNode(b, this.H.get(prevhashW), uPool);
+	   
+	   //final check: block height
+	   if (newBlock.parent.height < (this.height - BlockChain.CUT_OFF_AGE)) return false;
+	   
+	   //update height
+	   if (newBlock.height > this.height) this.height = newBlock.height;
+	   
+	   //all checks passed, start adding block
+	   this.maxHeightBlock.children.add(newBlock);
+	   this.maxHeightBlock = newBlock;
+	   this.H.put(new ByteArrayWrapper(newBlock.b.getHash()), newBlock);
+	   
+	   // extract the block's transactions
+	   for(Transaction t: b.getTransactions()){
+		   this.addTransaction(t);
+	   }
 	   
 	   return false;
    }
