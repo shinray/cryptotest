@@ -38,18 +38,35 @@ public class BlockChain {
    }
    
    // List of nodes
-   ArrayList<BlockNode> chain = new ArrayList<BlockNode>();
-   UTXOPool pending = new UTXOPool();
-   TransactionPool pool = new TransactionPool();
-   int height = 0;
+   private ArrayList<BlockNode> chain;
+   //UTXOPool pending = new UTXOPool();
+   private TransactionPool pool;
+   private int height;
+   private BlockNode maxHeightBlock;
 
    /* create an empty block chain with just a genesis block.
     * Assume genesis block is a valid block
     */
    public BlockChain(Block genesisBlock) {
       // IMPLEMENT THIS
-	   chain.add(new BlockNode(genesisBlock,null,pending));
+	   //chain.add(new BlockNode(genesisBlock,null,pending));
+	   // create a genesis block to start the chain
+	   // need the gblock, parent(none), and a pool.
+	   // create the pool by extracting the gblock's coinbase
+	   // aka the genesis transaction
+	   // and it becomes the output.
+	   UTXOPool uPool = new UTXOPool();
+	   Transaction coinbase = genesisBlock.getCoinbase();
+	   UTXO uCoinBase = new UTXO(coinbase.getHash(),0);
+	   uPool.addUTXO(uCoinBase, coinbase.getOutput(0));
+	   BlockNode genesis = new BlockNode(genesisBlock, null, uPool);
+	   
+	   //set up the chain
+	   chain = new ArrayList<BlockNode>();
+	   chain.add(genesis);
+	   maxHeightBlock = genesis;
 	   height = 1;
+	   
 	   return;
    }
 
@@ -57,7 +74,8 @@ public class BlockChain {
     */
    public Block getMaxHeightBlock() {
       // IMPLEMENT THIS
-	   return chain.get(height-1).b;
+	   return maxHeightBlock.b;
+	   //return chain.get(height-1).b;
 	   //return null;
    }
    
@@ -66,7 +84,8 @@ public class BlockChain {
     */
    public UTXOPool getMaxHeightUTXOPool() {
       // IMPLEMENT THIS
-	   return chain.get(height-1).getUTXOPoolCopy();
+	   return maxHeightBlock.uPool;
+//	   return chain.get(height-1).getUTXOPoolCopy();
 	   //return null;
    }
    
@@ -89,8 +108,9 @@ public class BlockChain {
    public boolean addBlock(Block b) {
        // IMPLEMENT THIS
 	   
-	   if(b.getPrevBlockHash() == null) return false;
-	   BlockNode newBlock = new BlockNode(b,this.height,pending);
+	   if(b.getPrevBlockHash() == null || b.equals(null)) return false;
+	   //BlockNode newBlock = new BlockNode(b,this.height,pending);
+	   
 	   return false;
    }
 
