@@ -108,6 +108,20 @@ public class TxHandler {
 			if(isValidTx(t)){
 				verifiedTxs.add(t);
 				
+				// cleanup verified inputs
+				for (Transaction.Input i : t.getInputs()) {
+					// get UTXO from given hash and index
+					UTXO claimedTX = new UTXO(i.prevTxHash, i.outputIndex);
+					pool.removeUTXO(claimedTX);
+				}
+				
+				//add new UTXOs to the public ledger
+                byte[] txHash = t.getHash();
+                ArrayList<Transaction.Output> txOutputs = t.getOutputs(); 
+                for(int i = 0; i < txOutputs.size(); i++) {
+                    UTXO utxo = new UTXO(txHash, i);
+                    pool.addUTXO(utxo, txOutputs.get(i));
+                }
 			}
 		}
 		Transaction[] ret = new Transaction[verifiedTxs.size()];
